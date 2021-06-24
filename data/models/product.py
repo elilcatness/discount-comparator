@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relation
 
 from ..db.db_session import SQLAlchemyBase
 
@@ -11,3 +12,4 @@ class Product(SQLAlchemyBase):
     price = Column(Integer)
     img = Column(String)
     market_id = Column(Integer, ForeignKey('markets.id'))
+    market = relation('Market', foreign_keys=market_id)

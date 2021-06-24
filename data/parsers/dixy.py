@@ -4,7 +4,6 @@ from datetime import timedelta
 from humanize import precisedelta
 
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
-from selenium.webdriver import Chrome, ChromeOptions
 
 from data.parsers.commonParser import CommonParser
 
