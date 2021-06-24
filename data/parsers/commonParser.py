@@ -1,7 +1,10 @@
 import logging
-from selenium.webdriver import Chrome, ChromeOptions
+import os
 from threading import Timer
-from exceptions import InheritanceError
+
+from selenium.webdriver import Chrome, ChromeOptions
+
+from ..exceptions import InheritanceError
 
 
 class CommonParser:
@@ -9,8 +12,9 @@ class CommonParser:
     interval: int = None
 
     def __init__(self, region: str):
-        logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s '
-                                                          '%(name)s %(message)s')
+        logging.basicConfig(filename=os.path.join('..', '..', 'parser.log'),
+                            format='%(asctime)s %(levelname)s '
+                                   '%(name)s %(message)s')
         if not self.url:
             raise InheritanceError('Child class should have an url attribute')
         self.driver = None
@@ -27,7 +31,8 @@ class CommonParser:
         if not getattr(self, 'driver', None):
             options = ChromeOptions()
             options.add_argument('--headless')
-            self.driver = Chrome(options=options)
+            self.driver = Chrome(executable_path=os.path.join('..', 'plugins', 'chromedriver.exe'),
+                                 options=options)
             self.driver.get(self.url)
 
     def close_driver(self):

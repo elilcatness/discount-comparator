@@ -18,13 +18,6 @@ class DixyParser(CommonParser):
     def __init__(self, region: str = 'Санкт-Петербург'):
         super(DixyParser, self).__init__(region)
 
-    def update_driver(self):
-        if not getattr(self, 'driver', None):
-            options = ChromeOptions()
-            options.add_argument('--headless')
-            self.driver = Chrome(options=options)
-            self.driver.get(self.url)
-
     def select_region(self):
         self.driver.get(self.url)
         region_select_menu = self.driver.find_element_by_class_name('icon-arrow-down')
