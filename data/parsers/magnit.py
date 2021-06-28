@@ -67,6 +67,9 @@ class MagnitParser(CommonParser):
         scroll_step = 200
         scroll_limit = self.driver.execute_script('return document.body.scrollHeight;')
 
+        idx_to = len(self.data)
+        checked = []
+
         products = self.driver.find_elements_by_xpath('//div[@class="сatalogue__main js-promo-container"]'
                                                       '/a')
         for product in products:
@@ -78,19 +81,28 @@ class MagnitParser(CommonParser):
                                                           'card-sale__col_img"]'
                                                           '/picture/img')
                 title = img_block.get_attribute('alt')
-                titles = [it['title'] for it in self.data]
-                if title in titles:
-                    continue
                 try:
                     price = int(product.find_element_by_xpath('.//span[@class="label__price-'
                                                               'integer"]').text)
                 except ValueError:
                     continue
+                try:
+                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
+                                                      self.data))[0])
+                    if self.data[idx]['price'] == price:
+                        checked.append(idx)
+                except IndexError:
+                    pass
                 self.data.append({'title': title,
                                   'price': price,
                                   'img': img_block.get_attribute('src')})
+                print(self.data[-1])
             except (NoSuchElementException, StaleElementReferenceException) as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
+
+        for i in range(idx_to):
+            if i in checked:
+                self.data.pop(i)
 
     def __repr__(self):
         return f'Магнит. {self.region}'

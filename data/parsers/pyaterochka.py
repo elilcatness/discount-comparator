@@ -1,6 +1,7 @@
 import logging
 import time
 
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import Chrome
 
 from .commonParser import CommonParser
@@ -42,23 +43,41 @@ class PyaterochkaParser(CommonParser):
         scroll_step = 200
         scroll_limit = self.driver.execute_script('return document.body.scrollHeight;')
 
+        idx_to = len(self.data)
+        checked = []
+
         products = self.driver.find_elements_by_xpath('//ul[@class="special-offers__offers"]'
                                                       '/a[@class="sale-card"]')
         for product in products:
-            if scroll_height < scroll_limit:
-                scroll_height += scroll_step
-                self.driver.execute_script(f'window.scrollTo(0, {scroll_height});')
-            title = product.find_element_by_xpath('.//p[@class="sale-card__title"]').text
             try:
-                price = int(product.find_element_by_xpath('.//span[@class="sale-card__price  '
-                                                          'sale-card__price--new"]'
-                                                          '/span').text.strip()[:-2])
-            except ValueError:
-                continue
-            img = product.find_element_by_xpath('.//img[@class="sale-card__img"]').get_attribute('src')
-            self.data.append({'title': title,
-                              'price': price,
-                              'img': img})
+                if scroll_height < scroll_limit:
+                    scroll_height += scroll_step
+                    self.driver.execute_script(f'window.scrollTo(0, {scroll_height});')
+                title = product.find_element_by_xpath('.//p[@class="sale-card__title"]').text
+                try:
+                    price = int(product.find_element_by_xpath('.//span[@class="sale-card__price  '
+                                                              'sale-card__price--new"]'
+                                                              '/span').text.strip()[:-2])
+                except ValueError:
+                    continue
+                try:
+                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
+                                                      self.data))[0])
+                    if self.data[idx]['price'] == price:
+                        checked.append(idx)
+                except IndexError:
+                    pass
+                img = product.find_element_by_xpath('.//img[@class="sale-card__img"]').get_attribute('src')
+                self.data.append({'title': title,
+                                  'price': price,
+                                  'img': img})
+                print(self.data[-1])
+            except (NoSuchElementException, StaleElementReferenceException) as e:
+                logging.warning(msg=f'{e.msg} [IN {self}]')
+
+        for i in range(idx_to):
+            if i in checked:
+                self.data.pop(i)
 
     def __repr__(self):
         return f'Пятёрочка. {self.region}'

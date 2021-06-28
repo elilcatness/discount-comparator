@@ -55,9 +55,12 @@ class DixyParser(CommonParser):
     def update_data(self, init_call=False):
         if not init_call:
             self.driver.refresh()
+
         self.scroll_to_bottom('a', 'btn view-more')
+
         checked = []
         idx_to = len(self.data)
+
         products = self.driver.find_elements_by_class_name('dixyCatalogItem ')
         for product in products:
             try:
@@ -65,12 +68,17 @@ class DixyParser(CommonParser):
                                                                ).find_element_by_tag_name('img')
                 title = pic_block.get_attribute('alt').replace('\xa0', ' ')
                 try:
+                    price = int(product.find_element_by_xpath('.//p[@itemprop="price"]'
+                                                              ).get_attribute('content'))
+                except ValueError:
+                    continue
+                try:
                     idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
                                                       self.data))[0])
-                    checked.append(idx)
+                    if self.data[idx]['price'] == price:
+                        checked.append(idx)
                 except IndexError:
                     pass
-                price = product.find_element_by_xpath('.//p[@itemprop="price"]').get_attribute('content')
                 self.data.append({'title': title,
                                   'price': price,
                                   'img': pic_block.get_attribute('src')})
