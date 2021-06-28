@@ -89,7 +89,6 @@ class MagnitParser(CommonParser):
                 self.data.append({'title': title,
                                   'price': price,
                                   'img': img_block.get_attribute('src')})
-                print(self.data[-1])
             except (NoSuchElementException, StaleElementReferenceException) as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 

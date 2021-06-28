@@ -9,7 +9,7 @@ from data.models.market import Market
 
 
 def main():
-    pyaterochka = PyaterochkaParser('г.Отрадное')
+    pass
 
 
 if __name__ == '__main__':

@@ -36,7 +36,6 @@ class PyaterochkaParser(CommonParser):
     def update_data(self, init_call=False):
         self.driver: Chrome
 
-        # if not init_call:
         self.driver.refresh()
 
         scroll_height = 0
@@ -52,7 +51,8 @@ class PyaterochkaParser(CommonParser):
             title = product.find_element_by_xpath('.//p[@class="sale-card__title"]').text
             try:
                 price = int(product.find_element_by_xpath('.//span[@class="sale-card__price  '
-                                                          'sale-card__price--new"]').text.strip())
+                                                          'sale-card__price--new"]'
+                                                          '/span').text.strip()[:-2])
             except ValueError:
                 continue
             img = product.find_element_by_xpath('.//img[@class="sale-card__img"]').get_attribute('src')
