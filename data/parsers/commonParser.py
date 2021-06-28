@@ -34,7 +34,7 @@ class CommonParser:
     def update_driver(self):
         if not getattr(self, 'driver', None):
             options = ChromeOptions()
-            options.add_argument('--headless')
+            # options.add_argument('--headless')
             self.driver = Chrome(executable_path=os.path.join('data', 'plugins', 'chromedriver.exe'),
                                  options=options)
 

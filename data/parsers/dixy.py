@@ -1,8 +1,8 @@
 import logging
 import time
 from datetime import timedelta
-from humanize import precisedelta
 
+from humanize import precisedelta
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 
 from data.parsers.commonParser import CommonParser
@@ -52,26 +52,34 @@ class DixyParser(CommonParser):
                     print('I AM STUCK')
                     continue
 
-    def update_data(self, init_call=False, prev_data: list = None):
-        prev_data = prev_data if prev_data else []
+    def update_data(self, init_call=False):
         if not init_call:
             self.driver.refresh()
         self.scroll_to_bottom('a', 'btn view-more')
-        self.data = []
+        checked = []
+        idx_to = len(self.data)
         products = self.driver.find_elements_by_class_name('dixyCatalogItem ')
         for product in products:
             try:
                 pic_block = product.find_element_by_class_name('dixyModal__pic'
                                                                ).find_element_by_tag_name('img')
                 title = pic_block.get_attribute('alt').replace('\xa0', ' ')
-                if title in prev_data:
-                    continue
+                try:
+                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
+                                                      self.data))[0])
+                    checked.append(idx)
+                except IndexError:
+                    pass
                 price = product.find_element_by_xpath('.//p[@itemprop="price"]').get_attribute('content')
                 self.data.append({'title': title,
                                   'price': price,
                                   'img': pic_block.get_attribute('src')})
             except NoSuchElementException as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
+
+        for i in range(idx_to):
+            if i in checked:
+                self.data.pop(i)
 
         self.set_refresh_process()
 
