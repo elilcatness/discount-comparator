@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relation
 
 from ..db.db_session import SQLAlchemyBase
 
@@ -8,3 +9,4 @@ class Market(SQLAlchemyBase):
 
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     name = Column(String, unique=True)
+    products = relation('Product')

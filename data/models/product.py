@@ -1,11 +1,14 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.orm import relation
 
 from ..db.db_session import SQLAlchemyBase
 
 
-class Product(SQLAlchemyBase):
+class Product(SQLAlchemyBase, SerializerMixin):
     __tablename__ = 'products'
+
+    serialize_only = ('name', 'price', 'img')
 
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
     name = Column(String)

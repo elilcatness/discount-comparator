@@ -67,9 +67,9 @@ class DixyParser(CommonParser):
                 if title in prev_data:
                     continue
                 price = product.find_element_by_xpath('.//p[@itemprop="price"]').get_attribute('content')
-                self.data.append({'Название': title,
-                                  'Цена': price,
-                                  'Картинка': pic_block.get_attribute('src')})
+                self.data.append({'title': title,
+                                  'price': price,
+                                  'img': pic_block.get_attribute('src')})
             except NoSuchElementException as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 
