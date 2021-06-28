@@ -10,11 +10,7 @@ from data.models.market import Market
 
 def main():
     with db_session.create_session() as session:
-        dixy_region = 'Ленинградская область'
-        dixy_market = session.query(Market).filter(
-            (Market.name == 'Дикси') and (Market.region == dixy_region)).first()
-        products = [pr.to_dict() for pr in dixy_market.products]
-        dixy = DixyParser(dixy_region, products)
+        pass
 
 
 if __name__ == '__main__':

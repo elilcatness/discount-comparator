@@ -24,10 +24,8 @@ class CommonParser:
         self.region = region
         self.set_region(region)
 
-        self.data = []
+        self.data = data_to_load if data_to_load else []
 
-        if data_to_load:
-            self.load_data(data_to_load)
         self.refresh_thread = None
         self.update_data(init_call=True)
 
