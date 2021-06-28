@@ -8,10 +8,10 @@ from ..db.db_session import SQLAlchemyBase
 class Product(SQLAlchemyBase, SerializerMixin):
     __tablename__ = 'products'
 
-    serialize_only = ('name', 'price', 'img')
+    serialize_only = ('title', 'price', 'img')
 
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
-    name = Column(String)
+    title = Column(String)
     price = Column(Integer)
     img = Column(String)
     market_id = Column(Integer, ForeignKey('markets.id'))

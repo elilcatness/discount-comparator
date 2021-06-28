@@ -8,5 +8,6 @@ class Market(SQLAlchemyBase):
     __tablename__ = 'markets'
 
     id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
-    name = Column(String, unique=True)
-    products = relation('Product')
+    name = Column(String)
+    region = Column(String)
+    products = relation('Product', overlaps='market')

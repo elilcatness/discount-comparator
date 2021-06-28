@@ -14,8 +14,8 @@ class DixyParser(CommonParser):
     url: str = 'https://dixy.ru/catalog/'
     interval: int = 3600
 
-    def __init__(self, region: str = 'Санкт-Петербург'):
-        super(DixyParser, self).__init__(region)
+    def __init__(self, region: str = 'Санкт-Петербург', data_to_load: list = None):
+        super(DixyParser, self).__init__(region, data_to_load)
 
     def select_region(self):
         self.driver.get(self.url)

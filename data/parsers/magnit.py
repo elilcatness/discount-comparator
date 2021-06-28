@@ -10,8 +10,8 @@ from .commonParser import CommonParser
 class MagnitParser(CommonParser):
     url = 'https://magnit.ru/promo/'
 
-    def __init__(self, region: str):
-        super(MagnitParser, self).__init__(region)
+    def __init__(self, region: str, data_to_load: list = None):
+        super(MagnitParser, self).__init__(region, data_to_load)
 
     def select_region(self):
         button_load_interval = 30
@@ -59,18 +59,6 @@ class MagnitParser(CommonParser):
                 return logging.error(f'Failed to load page [IN {self}]')
         return True
 
-    def load_data(self, data: list):
-        titles = [item.get('title') for item in [it.items() for it in data]]
-        for item in data:
-            if item['title'] not in titles:
-                self.data.append(item)
-            else:
-                idx = self.data.index(
-                    list(filter(lambda it: it.items()['title'] == item['title'],
-                                self.data))[0])
-                if item['price'] != self.data[idx]['price']:
-                    self.data[idx] = item
-
     def update_data(self, init_call: bool = False):
         if not init_call:
             self.driver.refresh()
@@ -90,7 +78,8 @@ class MagnitParser(CommonParser):
                                                           'card-sale__col_img"]'
                                                           '/picture/img')
                 title = img_block.get_attribute('alt')
-                if title in self.data:
+                titles = [it['title'] for it in self.data]
+                if title in titles:
                     continue
                 try:
                     price = int(product.find_element_by_xpath('.//span[@class="label__price-'
@@ -100,6 +89,7 @@ class MagnitParser(CommonParser):
                 self.data.append({'title': title,
                                   'price': price,
                                   'img': img_block.get_attribute('src')})
+                print(self.data[-1])
             except (NoSuchElementException, StaleElementReferenceException) as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 

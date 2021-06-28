@@ -11,10 +11,11 @@ class CommonParser:
     url: str = None
     interval: int = None
 
-    def __init__(self, region: str):
+    def __init__(self, region: str, data_to_load: list = None):
         logging.basicConfig(filename=os.path.join('parser.log'),
                             format='%(asctime)s %(levelname)s '
-                                   '%(name)s %(message)s')
+                                   '%(name)s %(message)s',
+                            encoding='utf-8')
         if not self.url:
             raise InheritanceError('Child class should have an url attribute')
         self.driver = None
@@ -24,6 +25,9 @@ class CommonParser:
         self.set_region(region)
 
         self.data = []
+
+        if data_to_load:
+            self.load_data(data_to_load)
         self.refresh_thread = None
         self.update_data(init_call=True)
 
@@ -50,6 +54,18 @@ class CommonParser:
 
     def update_data(self, init_call=False):
         pass
+
+    def load_data(self, data: list):
+        titles = [item['title'] for item in self.data]
+        for item in data:
+            if item['title'] not in titles:
+                self.data.append(item)
+            else:
+                idx = self.data.index(
+                    list(filter(lambda it: it['title'] == item['title'],
+                                self.data))[0])
+                if item['price'] != self.data[idx]['price']:
+                    self.data[idx] = item
 
     def get_data(self):
         return self.data
