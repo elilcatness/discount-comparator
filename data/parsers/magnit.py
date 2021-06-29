@@ -5,13 +5,16 @@ from selenium.common.exceptions import NoSuchElementException, ElementNotInterac
     StaleElementReferenceException
 
 from .commonParser import CommonParser
+from ..db import db_session
+from ..models.product import Product
 
 
-class MagnitParser(CommonParser):
-    url = 'https://magnit.ru/promo/'
+class Magnit(CommonParser):
+    name: str = 'Магнит'
+    url: str = 'https://magnit.ru/promo/'
 
     def __init__(self, region: str, data_to_load: list = None):
-        super(MagnitParser, self).__init__(region, data_to_load)
+        super(Magnit, self).__init__(region, data_to_load)
 
     def select_region(self):
         button_load_interval = 30
@@ -70,6 +73,8 @@ class MagnitParser(CommonParser):
         idx_to = len(self.data)
         checked = []
 
+        session = db_session.create_session()
+
         products = self.driver.find_elements_by_xpath('//div[@class="сatalogue__main js-promo-container"]'
                                                       '/a')
         for product in products:
@@ -86,23 +91,24 @@ class MagnitParser(CommonParser):
                                                               'integer"]').text)
                 except ValueError:
                     continue
-                try:
-                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
-                                                      self.data))[0])
-                    if self.data[idx]['price'] == price:
-                        checked.append(idx)
-                except IndexError:
-                    pass
-                self.data.append({'title': title,
-                                  'price': price,
-                                  'img': img_block.get_attribute('src')})
-                print(self.data[-1])
+                checked = self.merge_product(title, price, checked)
+                prod = Product(Product(title=title, price=price, img=img_block.get_attribute('src')))
+                session.add(prod)
+                session.commit()
+                self.products.append(prod)
+                session.merge(self)
+                session.commit()
             except (NoSuchElementException, StaleElementReferenceException) as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 
         for i in range(idx_to):
-            if i in checked:
-                self.data.pop(i)
+            if i not in checked:
+                session.delete(self.products.pop(i))
+
+        session.commit()
+        session.close()
+
+        self.set_refresh_process()
 
     def __repr__(self):
         return f'Магнит. {self.region}'

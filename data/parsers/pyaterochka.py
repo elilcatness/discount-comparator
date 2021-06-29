@@ -5,6 +5,8 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from selenium.webdriver import Chrome
 
 from .commonParser import CommonParser
+from ..db import db_session
+from ..models.product import Product
 
 
 class PyaterochkaParser(CommonParser):
@@ -46,6 +48,8 @@ class PyaterochkaParser(CommonParser):
         idx_to = len(self.data)
         checked = []
 
+        session = db_session.create_session()
+
         products = self.driver.find_elements_by_xpath('//ul[@class="special-offers__offers"]'
                                                       '/a[@class="sale-card"]')
         for product in products:
@@ -60,24 +64,22 @@ class PyaterochkaParser(CommonParser):
                                                               '/span').text.strip()[:-2])
                 except ValueError:
                     continue
-                try:
-                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
-                                                      self.data))[0])
-                    if self.data[idx]['price'] == price:
-                        checked.append(idx)
-                except IndexError:
-                    pass
-                img = product.find_element_by_xpath('.//img[@class="sale-card__img"]').get_attribute('src')
-                self.data.append({'title': title,
-                                  'price': price,
-                                  'img': img})
-                print(self.data[-1])
+                checked = self.merge_product(title, price, checked)
+                prod = Product(title=title, price=price,
+                               img=product.find_element_by_xpath('.//img[@class="sale-card__img"]'
+                                                                 ).get_attribute('src'))
+                session.add(prod)
+                session.commit()
+                self.products.append(prod)
             except (NoSuchElementException, StaleElementReferenceException) as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 
         for i in range(idx_to):
-            if i in checked:
-                self.data.pop(i)
+            if i not in checked:
+                session.delete(self.products.pop(i))
+
+        session.commit()
+        session.close()
 
     def __repr__(self):
         return f'Пятёрочка. {self.region}'

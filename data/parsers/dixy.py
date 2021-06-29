@@ -5,17 +5,20 @@ from datetime import timedelta
 from humanize import precisedelta
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 
+from data.db import db_session
+from data.models.product import Product
 from data.parsers.commonParser import CommonParser
 
 
-class DixyParser(CommonParser):
+class Dixy(CommonParser):
     """Class that consists of products data of Dixy market in particular region and updates them"""
 
+    name: str = 'Дикси'
     url: str = 'https://dixy.ru/catalog/'
     interval: int = 3600
 
-    def __init__(self, region: str = 'Санкт-Петербург', data_to_load: list = None):
-        super(DixyParser, self).__init__(region, data_to_load)
+    def __init__(self, region: str = 'Санкт-Петербург'):
+        super(Dixy, self).__init__(region)
 
     def select_region(self):
         self.driver.get(self.url)
@@ -61,6 +64,8 @@ class DixyParser(CommonParser):
         checked = []
         idx_to = len(self.data)
 
+        session = db_session.create_session()
+
         products = self.driver.find_elements_by_class_name('dixyCatalogItem ')
         for product in products:
             try:
@@ -72,22 +77,22 @@ class DixyParser(CommonParser):
                                                               ).get_attribute('content'))
                 except ValueError:
                     continue
-                try:
-                    idx = self.data.index(list(filter(lambda prod: prod['title'] == title,
-                                                      self.data))[0])
-                    if self.data[idx]['price'] == price:
-                        checked.append(idx)
-                except IndexError:
-                    pass
-                self.data.append({'title': title,
-                                  'price': price,
-                                  'img': pic_block.get_attribute('src')})
+                checked = self.merge_product(title, price, checked)
+                prod = Product(title=title, price=price, img=pic_block.get_attribute('src'))
+                session.add(prod)
+                session.commit()
+                self.products.append(prod)
+                session.merge(self)
+                session.commit()
             except NoSuchElementException as e:
                 logging.warning(msg=f'{e.msg} [IN {self}]')
 
         for i in range(idx_to):
-            if i in checked:
-                self.data.pop(i)
+            if i not in checked:
+                session.delete(self.products.pop(i))
+
+        session.commit()
+        session.close()
 
         self.set_refresh_process()
 
@@ -97,7 +102,7 @@ class DixyParser(CommonParser):
 
 if __name__ == '__main__':
     start_time = time.time()
-    dixy = DixyParser('Ленинградская область')
+    dixy = Dixy('Ленинградская область')
     print('\n'.join([', '.join([f'{key}: {val}' for key, val in [item for item in product.items()]])
                      for product in dixy.get_data()]))
     seconds, microseconds = map(int, '{0:.2f}'.format(time.time() - start_time).split('.'))

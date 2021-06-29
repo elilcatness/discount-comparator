@@ -5,9 +5,10 @@ from threading import Timer
 from selenium.webdriver import Chrome, ChromeOptions
 
 from ..exceptions import InheritanceError
+from ..models.market import Market
 
 
-class CommonParser:
+class CommonParser(Market):
     url: str = None
     interval: int = None
 
@@ -19,10 +20,10 @@ class CommonParser:
         if not self.url:
             raise InheritanceError('Child class should have an url attribute')
         self.driver = None
-        self.update_driver()
+        # self.update_driver()
 
         self.region = region
-        self.set_region(region)
+        # self.set_region(region)
 
         self.data = data_to_load if data_to_load else []
 
@@ -50,20 +51,18 @@ class CommonParser:
     def select_region(self):
         pass
 
+    def merge_product(self, title: str, price: int, array: list):
+        try:
+            idx = self.products.index(list(filter(lambda prod: prod.title == title,
+                                                  self.products))[0])
+            if self.data[idx].price == price:
+                array.append(idx)
+        except IndexError:
+            pass
+        return array
+
     def update_data(self, init_call=False):
         pass
-
-    def load_data(self, data: list):
-        titles = [item['title'] for item in self.data]
-        for item in data:
-            if item['title'] not in titles:
-                self.data.append(item)
-            else:
-                idx = self.data.index(
-                    list(filter(lambda it: it['title'] == item['title'],
-                                self.data))[0])
-                if item['price'] != self.data[idx]['price']:
-                    self.data[idx] = item
 
     def get_data(self):
         return self.data
