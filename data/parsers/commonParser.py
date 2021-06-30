@@ -12,7 +12,8 @@ class CommonParser(Market):
     url: str = None
     interval: int = None
 
-    def __init__(self, region: str, data_to_load: list = None):
+    def __init__(self, region: str):
+        self.name = self.__class__.__name__
         logging.basicConfig(filename=os.path.join('parser.log'),
                             format='%(asctime)s %(levelname)s '
                                    '%(name)s %(message)s',
@@ -20,15 +21,12 @@ class CommonParser(Market):
         if not self.url:
             raise InheritanceError('Child class should have an url attribute')
         self.driver = None
-        # self.update_driver()
+        self.update_driver()
 
         self.region = region
-        # self.set_region(region)
-
-        self.data = data_to_load if data_to_load else []
+        self.set_region(region)
 
         self.refresh_thread = None
-        self.update_data(init_call=True)
 
     def update_driver(self):
         if not getattr(self, 'driver', None):

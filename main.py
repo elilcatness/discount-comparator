@@ -21,8 +21,7 @@ api.add_resource(MarketListResource, '/api/markets')
 
 def main():
     with db_session.create_session() as session:
-        dixy = session.query(Dixy).get(4)
-        print(dixy.id)
+        market = session.query(Dixy).first()
 
 
 if __name__ == '__main__':

@@ -8,12 +8,12 @@ from selenium.common.exceptions import NoSuchElementException, ElementClickInter
 from data.db import db_session
 from data.models.product import Product
 from data.parsers.commonParser import CommonParser
+from data.exceptions import InvalidRegionError
 
 
 class Dixy(CommonParser):
     """Class that consists of products data of Dixy market in particular region and updates them"""
 
-    name: str = 'Дикси'
     url: str = 'https://dixy.ru/catalog/'
     interval: int = 3600
 
@@ -21,6 +21,8 @@ class Dixy(CommonParser):
         super(Dixy, self).__init__(region)
 
     def select_region(self):
+        error_msg = f'Failed to find {self.region} in region buttons [IN {self}]'
+
         self.driver.get(self.url)
         region_select_menu = self.driver.find_element_by_class_name('icon-arrow-down')
         if not region_select_menu:
@@ -28,13 +30,16 @@ class Dixy(CommonParser):
         region_select_menu.click()
         region_buttons = self.driver.find_elements_by_xpath('//div[@class="simplebar-content"]/ul//li/a')
         if not region_buttons:
-            return logging.error(message=f'Failed to get region buttons [IN {self}]')
+            logging.error(message=error_msg)
+            raise InvalidRegionError(error_msg)
         try:
             region_button = list(filter(lambda reg: reg.text.lower() == self.region.lower(),
                                         region_buttons))[0]
         except IndexError:
-            return logging.error(f'Failed to find {self.region} in region buttons [IN {self}]')
+            logging.error(error_msg)
+            raise InvalidRegionError(error_msg)
         region_button.click()
+        print('\nSET REGION\n')
         return True
 
     def scroll_to_bottom(self, tag: str, class_: str):
@@ -56,13 +61,14 @@ class Dixy(CommonParser):
                     continue
 
     def update_data(self, init_call=False):
+        print('\nSTARTED UPDATING DATA\n')
         if not init_call:
             self.driver.refresh()
 
         self.scroll_to_bottom('a', 'btn view-more')
 
         checked = []
-        idx_to = len(self.data)
+        idx_to = len(self.products)
 
         session = db_session.create_session()
 

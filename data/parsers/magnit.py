@@ -4,19 +4,20 @@ import time
 from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException, \
     StaleElementReferenceException
 
-from .commonParser import CommonParser
-from ..db import db_session
-from ..models.product import Product
+from data.parsers.commonParser import CommonParser
+from data.db import db_session
+from data.models.product import Product
+from data.exceptions import InvalidRegionError
 
 
 class Magnit(CommonParser):
-    name: str = 'Магнит'
     url: str = 'https://magnit.ru/promo/'
 
     def __init__(self, region: str, data_to_load: list = None):
         super(Magnit, self).__init__(region, data_to_load)
 
     def select_region(self):
+        error_msg = f'Failed to select region by clicking the button [IN {self}]'
         button_load_interval = 30
         result_load_interval = 5
 
@@ -35,10 +36,12 @@ class Magnit(CommonParser):
                     break
                 except ElementNotInteractableException:
                     if time.time() - start_time > button_load_interval:
-                        return logging.error(
-                            msg=f'Failed to select region by clicking the button [IN {self}]')
+                        logging.error(
+                            msg=error_msg)
+                        raise InvalidRegionError(error_msg)
         except NoSuchElementException as e:
-            return logging.error(msg=f'{e.msg} [IN {self}]')
+            logging.error(msg=f'{e.msg} [IN {self}]')
+            raise InvalidRegionError(e.msg)
 
         field = self.driver.find_element_by_xpath('//input[@name="citySearch"]')
         field.clear()
@@ -51,7 +54,8 @@ class Magnit(CommonParser):
                 break
             except NoSuchElementException:
                 if time.time() - start_time > result_load_interval:
-                    return logging.error(msg=f'Failed to find region [IN {self}]')
+                    logging.error(msg=error_msg)
+                    raise InvalidRegionError(error_msg)
         link.click()
         loaded = False
         time.sleep(result_load_interval)
@@ -59,7 +63,9 @@ class Magnit(CommonParser):
         while not loaded:
             loaded = self.driver.execute_script('return document.readyState;') == 'complete'
             if time.time() - start_time > button_load_interval:
-                return logging.error(f'Failed to load page [IN {self}]')
+                msg = f'Failed to load page [IN {self}]'
+                logging.error(msg=msg)
+                raise InvalidRegionError(msg)
         return True
 
     def update_data(self, init_call: bool = False):
@@ -70,7 +76,7 @@ class Magnit(CommonParser):
         scroll_step = 200
         scroll_limit = self.driver.execute_script('return document.body.scrollHeight;')
 
-        idx_to = len(self.data)
+        idx_to = len(self.products)
         checked = []
 
         session = db_session.create_session()

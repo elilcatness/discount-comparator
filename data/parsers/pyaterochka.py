@@ -4,9 +4,10 @@ import time
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import Chrome
 
-from .commonParser import CommonParser
-from ..db import db_session
-from ..models.product import Product
+from data.parsers.commonParser import CommonParser
+from data.db import db_session
+from data.models.product import Product
+from data.exceptions import InvalidRegionError
 
 
 class Pyaterochka(CommonParser):
@@ -18,6 +19,7 @@ class Pyaterochka(CommonParser):
         super(Pyaterochka, self).__init__(region, data_to_load)
 
     def select_region(self):
+        error_msg = f'Failed to find region [IN {self}]'
         search_time = 5
 
         self.driver.get(self.url)
@@ -31,7 +33,8 @@ class Pyaterochka(CommonParser):
 
         results = self.driver.find_elements_by_xpath('.//div[@class="suggestions"]/ul//li/div')
         if not results:
-            logging.error(msg=f'Failed to find region [IN {self}]')
+            logging.error(msg=error_msg)
+            raise InvalidRegionError(error_msg)
         self.region = results[0].text
         results[0].click()
         return True
@@ -45,7 +48,7 @@ class Pyaterochka(CommonParser):
         scroll_step = 200
         scroll_limit = self.driver.execute_script('return document.body.scrollHeight;')
 
-        idx_to = len(self.data)
+        idx_to = len(self.products)
         checked = []
 
         session = db_session.create_session()
