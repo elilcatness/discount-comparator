@@ -13,6 +13,7 @@ from data.api.resources.product_resource import ProductResource, ProductListReso
 app = Flask(__name__)
 api = Api(app)
 api.add_resource(ProductResource, '/api/product')
+api.add_resource(ProductListResource, '/api/products')
 
 
 def main():
