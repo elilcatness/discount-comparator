@@ -3,7 +3,7 @@ from flask_restful import Resource
 
 from data.db import db_session
 from data.models.product import Product
-from data.api.parsers.product_parsers import ProductParser
+from data.api.parsers.product import ProductParser
 
 
 class BasicResource(Resource):

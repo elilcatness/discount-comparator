@@ -9,13 +9,13 @@ from ..db import db_session
 from ..models.product import Product
 
 
-class PyaterochkaParser(CommonParser):
+class Pyaterochka(CommonParser):
     """Class that consists of products data of Pyterochka market in particular address and updates them"""
 
     url: str = 'https://5ka.ru/special_offers/'
 
     def __init__(self, region: str, data_to_load: list = None):
-        super(PyaterochkaParser, self).__init__(region, data_to_load)
+        super(Pyaterochka, self).__init__(region, data_to_load)
 
     def select_region(self):
         search_time = 5
